@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JDeps Analysis Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0; padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; color: #333;
+        }
+        .container {
+            max-width: 1200px; margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white; padding: 40px; text-align: center;
+        }
+        .header h1 { margin: 0; font-size: 3em; font-weight: 300; }
+        .header p { margin: 10px 0 0; opacity: 0.9; font-size: 1.2em; }
+        .nav {
+            background: #34495e; display: flex;
+        }
+        .nav-item {
+            flex: 1; padding: 20px; text-align: center;
+            color: white; cursor: pointer; transition: all 0.3s;
+            border: none; background: none; font-size: 1.1em;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.1); }
+        .nav-item.active { background: #3498db; }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .info-box {
+            background: #f8f9fa; border-left: 4px solid #3498db;
+            padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0;
+        }
+        .analysis-output {
+            background: #2c3e50; color: #ecf0f1;
+            padding: 25px; border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px; line-height: 1.6;
+            overflow-x: auto; white-space: pre-wrap;
+            max-height: 600px; overflow-y: auto;
+        }
+        .stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin: 30px 0;
+        }
+        .stat-card {
+            background: white; padding: 25px; border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); text-align: center;
+            border-top: 4px solid #3498db;
+        }
+        .stat-number {
+            font-size: 2.5em; font-weight: bold;
+            color: #3498db; margin-bottom: 10px;
+        }
+        .stat-label {
+            color: #7f8c8d; font-size: 1.1em;
+        }
+        .highlight { background: #f39c12; color: white; padding: 2px 6px; border-radius: 3px; }
+        .dependency { color: #27ae60; }
+        .arrow { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 JDeps Analysis Report</h1>
+            <p>Comprehensive Java Dependency Analysis</p>
+            <p style="font-size: 0.9em; margin-top: 15px;">JAR: <code>build/simple-jdeps-test.jar</code></p>
+        </div>
+        
+        <div class="nav">
+            <button class="nav-item active" onclick="showSection('overview')">📊 Overview</button>
+            <button class="nav-item" onclick="showSection('basic')">🔎 Basic Analysis</button>
+            <button class="nav-item" onclick="showSection('verbose')">📋 Verbose Analysis</button>
+            <button class="nav-item" onclick="showSection('summary')">📈 Summary</button>
+        </div>
+        
+        <div class="content">
+            <div id="overview" class="section active">
+                <h2>📊 Analysis Overview</h2>
+                <div class="info-box">
+                    <h3>About This Report</h3>
+                    <p>This report shows the dependency analysis of your Java application using JDeps.                        JDeps is a static analysis tool that shows the package-level or class-level dependencies.</p>
+                    <p><strong>Generated:</strong> Tue Jul 22 16:51:58 IST 2025</p>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Basic Dependencies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">38</div>
+                        <div class="stat-label">Verbose Dependencies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">1</div>
+                        <div class="stat-label">Summary Items</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">JDK Dependencies</div>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <h3>🎯 Key Findings</h3>
+                    <ul>
+                        <li>Your application primarily depends on <span class="highlight">java.base</span> module</li>
+                        <li>Uses modern Java features like <span class="dependency">streams</span>, <span class="dependency">time API</span>, and <span class="dependency">collections</span></li>
+                        <li>No external library dependencies detected in this simple version</li>
+                        <li>Clean dependency structure with standard JDK usage</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="basic" class="section">
+                <h2>🔎 Basic Dependency Analysis</h2>
+                <div class="info-box">
+                    <p>Shows package-level dependencies of your application.                        Each line shows: <span class="dependency">source</span> <span class="arrow">→</span> <span class="dependency">target</span></p>
+                </div>
+                <div class="analysis-output">simple-jdeps-test.jar -&gt; <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; java.io                                            <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; java.lang                                          <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; java.lang.invoke                                   <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.nio</span>.file                                      <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.nio</span>.file.attribute                            <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.time</span>                                          <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.util</span>                                          <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.util</span>.concurrent                               <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.util</span>.function                                 <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.util</span>.regex                                    <span class="highlight">java.base</span>
+   com.example.jdeps                                  -&gt; <span class="dependency">java.util</span>.stream                                   <span class="highlight">java.base</span>
+</div>
+            </div>
+            
+            <div id="verbose" class="section">
+                <h2>📋 Verbose Class-Level Analysis</h2>
+                <div class="info-box">
+                    <p>Detailed class-level dependencies showing exactly which classes depend on which packages.</p>
+                </div>
+                <div class="analysis-output">simple-jdeps-test.jar -&gt; <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.io.IOException                                <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.io.PrintStream                                <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.CharSequence                             <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.Integer                                  <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.Object                                   <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.String                                   <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.System                                   <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.invoke.CallSite                          <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.invoke.LambdaMetafactory                 <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.invoke.MethodHandle                      <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.invoke.MethodHandles                     <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.invoke.MethodHandles$Lookup              <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.invoke.MethodType                        <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; java.lang.invoke.StringConcatFactory               <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.nio</span>.file.Files                                <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.nio</span>.file.OpenOption                           <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.nio</span>.file.Path                                 <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.nio</span>.file.attribute.FileAttribute              <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.time</span>.LocalDateTime                            <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.ArrayList                                <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.Arrays                                   <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.Collection                               <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.HashMap                                  <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.HashSet                                  <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.Iterator                                 <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.List                                     <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.Map                                      <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.Set                                      <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.concurrent.ConcurrentHashMap             <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.function.Predicate                       <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.function.ToIntFunction                   <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.regex.Matcher                            <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.regex.Pattern                            <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.stream.Collector                         <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.stream.Collectors                        <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.stream.IntStream                         <span class="highlight">java.base</span>
+   com.example.jdeps.SimpleJDepsTestApp               -&gt; <span class="dependency">java.util</span>.stream.Stream                            <span class="highlight">java.base</span>
+</div>
+            </div>
+            
+            <div id="summary" class="section">
+                <h2>📈 Summary Analysis</h2>
+                <div class="info-box">
+                    <p>High-level summary showing module dependencies only.</p>
+                </div>
+                <div class="analysis-output">simple-jdeps-test.jar -&gt; <span class="highlight">java.base</span>
+</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked nav item
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

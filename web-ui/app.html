@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JDeps Project Analyzer - Interactive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 30px 0;
+        }
+        
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #e8f5e8;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .progress-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-title {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .status-log {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            border: 1px solid #dee2e6;
+        }
+        
+        .results-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-title {
+            font-size: 1.6em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+        }
+        
+        .action-btn.success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+        
+        .report-preview {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            height: 500px;
+            width: 100%;
+            background: white;
+        }
+        
+        .error-section {
+            display: none;
+            background: #fff5f5;
+            border: 2px solid #e74c3c;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            color: #c0392b;
+        }
+        
+        .error-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .file-info {
+            background: #e8f4fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .file-info-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .file-details {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .upload-section, .progress-section, .results-section {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .upload-area {
+                padding: 40px 15px;
+            }
+            
+            .report-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 JDeps Project Analyzer</h1>
+            <p>Upload a Java project ZIP file for comprehensive dependency analysis</p>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drop your Java project ZIP here</div>
+                <div class="upload-hint">or click to browse files (Max: 100MB)</div>
+                <input type="file" id="fileInput" accept=".zip" />
+            </div>
+            
+            <div class="file-info" id="fileInfo">
+                <div class="file-info-title">📋 Selected File:</div>
+                <div class="file-details" id="fileDetails"></div>
+            </div>
+        </div>
+        
+        <!-- Progress Section -->
+        <div class="progress-section" id="progressSection">
+            <div class="progress-title">🔄 Processing Your Project...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Preparing analysis...</div>
+            
+            <div class="status-log" id="statusLog"></div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-title">✅ Analysis Complete!</div>
+            
+            <div class="report-actions">
+                <button class="action-btn success" onclick="viewReport()">
+                    📊 View Full Report
+                </button>
+                <button class="action-btn" onclick="downloadReport()">
+                    💾 Download Report
+                </button>
+                <button class="action-btn secondary" onclick="viewRawData()">
+                    🔍 View Raw Data
+                </button>
+            </div>
+            
+            <iframe class="report-preview" id="reportPreview" src="about:blank"></iframe>
+            
+            <button class="reset-btn" onclick="resetApp()">
+                🔄 Analyze Another Project
+            </button>
+        </div>
+        
+        <!-- Error Section -->
+        <div class="error-section" id="errorSection">
+            <div class="error-title">❌ Analysis Failed</div>
+            <div id="errorMessage"></div>
+            <button class="reset-btn" onclick="resetApp()">
+                🔄 Try Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentReportId = null;
+        
+        // Upload area interactions
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileDetails = document.getElementById('fileDetails');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        }
+        
+        function handleFile(file) {
+            // Validate file
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                showError('Please select a ZIP file.');
+                return;
+            }
+            
+            if (file.size > 100 * 1024 * 1024) { // 100MB
+                showError('File size exceeds 100MB limit.');
+                return;
+            }
+            
+            // Show file info
+            fileDetails.innerHTML = `
+                <strong>Name:</strong> ${file.name}<br>
+                <strong>Size:</strong> ${formatFileSize(file.size)}<br>
+                <strong>Type:</strong> ${file.type || 'ZIP Archive'}
+            `;
+            fileInfo.style.display = 'block';
+            
+            // Start upload and analysis
+            uploadAndAnalyze(file);
+        }
+        
+        async function uploadAndAnalyze(file) {
+            showProgress();
+            
+            try {
+                updateProgress(10, 'Uploading file...');
+                
+                // Upload file
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const uploadResponse = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('Upload response status:', uploadResponse.status);
+                
+                if (!uploadResponse.ok) {
+                    const errorText = await uploadResponse.text();
+                    console.error('Upload response error:', errorText);
+                    throw new Error(`Upload failed: ${uploadResponse.status} - ${errorText}`);
+                }
+                
+                const uploadResult = await uploadResponse.json();
+                console.log('Upload result:', uploadResult);
+                
+                if (uploadResult.status !== 'success') {
+                    throw new Error(uploadResult.message || 'Upload failed');
+                }
+                
+                addToLog(`✅ File uploaded: ${uploadResult.filePath}`);
+                updateProgress(30, 'File uploaded successfully');
+                
+                // Start analysis
+                updateProgress(40, 'Starting JDeps analysis...');
+                addToLog('🔍 Beginning dependency analysis...');
+                
+                const analysisResponse = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        filePath: uploadResult.filePath
+                    })
+                });
+                
+                console.log('Analysis response status:', analysisResponse.status);
+                console.log('Analysis response headers:', analysisResponse.headers);
+                
+                if (!analysisResponse.ok) {
+                    const errorText = await analysisResponse.text();
+                    console.error('Analysis response error:', errorText);
+                    throw new Error(`Analysis failed: ${analysisResponse.status} - ${errorText}`);
+                }
+                
+                updateProgress(60, 'Extracting and compiling project...');
+                addToLog('📦 Extracting ZIP archive...');
+                addToLog('🔨 Compiling Java sources...');
+                
+                updateProgress(80, 'Running JDeps analysis...');
+                addToLog('⚙️ Analyzing dependencies...');
+                
+                const analysisResult = await analysisResponse.json();
+                console.log('Analysis result:', analysisResult);
+                
+                if (analysisResult.status !== 'success') {
+                    throw new Error(analysisResult.message || 'Analysis failed');
+                }
+                
+                currentReportId = analysisResult.reportId;
+                
+                updateProgress(90, 'Generating report...');
+                addToLog('📊 Creating HTML report...');
+                
+                updateProgress(100, 'Analysis complete!');
+                addToLog(`✅ Report generated: ${analysisResult.reportPath}`);
+                
+                setTimeout(() => {
+                    showResults(analysisResult);
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Analysis error:', error);
+                console.error('Error stack:', error.stack);
+                addToLog(`❌ Error: ${error.message}`);
+                showError(`Analysis failed: ${error.message}`);
+            }
+        }
+        
+        function updateProgress(percentage, message) {
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = message;
+        }
+        
+        function addToLog(message) {
+            const log = document.getElementById('statusLog');
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `[${timestamp}] ${message}\n`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        function showProgress() {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('progressSection').style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'none';
+        }
+        
+        function showResults(result) {
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'block';
+            
+            // Load report in iframe
+            document.getElementById('reportPreview').src = `/reports/${result.reportId}/index.html`;
+        }
+        
+        function showError(message) {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+        }
+        
+        function resetApp() {
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('progressSection').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'none';
+            document.getElementById('fileInfo').style.display = 'none';
+            
+            // Reset form
+            document.getElementById('fileInput').value = '';
+            document.getElementById('statusLog').innerHTML = '';
+            document.getElementById('progressFill').style.width = '0%';
+            currentReportId = null;
+        }
+        
+        function viewReport() {
+            if (currentReportId) {
+                window.open(`/reports/${currentReportId}/index.html`, '_blank');
+            }
+        }
+        
+        function downloadReport() {
+            if (currentReportId) {
+                window.open(`/reports/${currentReportId}/download`, '_blank');
+            }
+        }
+        
+        function viewRawData() {
+            if (currentReportId) {
+                window.open(`/reports/${currentReportId}/raw.json`, '_blank');
+            }
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Initialize app
+        resetApp();
+    </script>
+</body>
+</html>

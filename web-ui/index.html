@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JDeps Project Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            padding: 40px 0;
+        }
+        
+        .header h1 {
+            font-size: 3.5em;
+            font-weight: 300;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .upload-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 50px;
+            text-align: center;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 60px 20px;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8f9fa;
+        }
+        
+        .upload-area:hover {
+            border-color: #2980b9;
+            background: #e3f2fd;
+            transform: translateY(-2px);
+        }
+        
+        .upload-area.dragover {
+            border-color: #27ae60;
+            background: #e8f5e8;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .upload-hint {
+            color: #7f8c8d;
+            font-size: 1em;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .analyze-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .file-info {
+            background: #e8f5e8;
+            border: 1px solid #27ae60;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .file-name {
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 5px;
+        }
+        
+        .file-size {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        
+        .progress-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        
+        .progress-text {
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-section {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid #e74c3c;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .error-text {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .result-section {
+            display: none;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .feature-desc {
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+        
+        .supported-formats {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .supported-formats h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .format-list {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .format-tag {
+            background: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .upload-section {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5em;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 JDeps Project Analyzer</h1>
+            <p>Upload your Java project ZIP file and get comprehensive dependency analysis with beautiful reports</p>
+        </div>
+        
+        <div class="upload-section">
+            <h2>Upload Your Java Project</h2>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drop your ZIP file here or click to browse</div>
+                <div class="upload-hint">Supports .zip, .jar files up to 100MB</div>
+            </div>
+            
+            <input type="file" id="fileInput" class="file-input" accept=".zip,.jar" />
+            
+            <div class="file-info" id="fileInfo">
+                <div class="file-name" id="fileName"></div>
+                <div class="file-size" id="fileSize"></div>
+            </div>
+            
+            <button class="analyze-btn" id="analyzeBtn">🚀 Analyze Project</button>
+            
+            <div class="error-section" id="errorSection">
+                <div class="error-text" id="errorText"></div>
+            </div>
+        </div>
+        
+        <div class="progress-section" id="progressSection">
+            <h3>Analyzing Your Project</h3>
+            <div class="spinner"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Initializing analysis...</div>
+        </div>
+        
+        <div class="result-section" id="resultSection">
+            <iframe id="reportFrame" width="100%" height="800" frameborder="0" style="border-radius: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);"></iframe>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Comprehensive Analysis</div>
+                <div class="feature-desc">Get detailed dependency analysis including package-level, class-level, and module dependencies</div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🎨</div>
+                <div class="feature-title">Beautiful Reports</div>
+                <div class="feature-desc">Interactive web reports with charts, graphs, and easy-to-understand visualizations</div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Fast Processing</div>
+                <div class="feature-desc">Quick analysis powered by JDeps with real-time progress tracking</div>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-title">Secure & Local</div>
+                <div class="feature-desc">All processing happens locally on your machine. Your code never leaves your system</div>
+            </div>
+        </div>
+        
+        <div class="supported-formats">
+            <h3>Supported Project Types</h3>
+            <div class="format-list">
+                <span class="format-tag">Maven Projects</span>
+                <span class="format-tag">Gradle Projects</span>
+                <span class="format-tag">JAR Files</span>
+                <span class="format-tag">ZIP Archives</span>
+                <span class="format-tag">Java Source Code</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class JDepsAnalyzer {
+            constructor() {
+                this.initializeElements();
+                this.attachEventListeners();
+                this.selectedFile = null;
+            }
+            
+            initializeElements() {
+                this.uploadArea = document.getElementById('uploadArea');
+                this.fileInput = document.getElementById('fileInput');
+                this.fileInfo = document.getElementById('fileInfo');
+                this.fileName = document.getElementById('fileName');
+                this.fileSize = document.getElementById('fileSize');
+                this.analyzeBtn = document.getElementById('analyzeBtn');
+                this.errorSection = document.getElementById('errorSection');
+                this.errorText = document.getElementById('errorText');
+                this.progressSection = document.getElementById('progressSection');
+                this.progressFill = document.getElementById('progressFill');
+                this.progressText = document.getElementById('progressText');
+                this.resultSection = document.getElementById('resultSection');
+                this.reportFrame = document.getElementById('reportFrame');
+            }
+            
+            attachEventListeners() {
+                // Click to upload
+                this.uploadArea.addEventListener('click', () => {
+                    this.fileInput.click();
+                });
+                
+                // File selection
+                this.fileInput.addEventListener('change', (e) => {
+                    this.handleFileSelection(e.target.files[0]);
+                });
+                
+                // Drag and drop
+                this.uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    this.uploadArea.classList.add('dragover');
+                });
+                
+                this.uploadArea.addEventListener('dragleave', () => {
+                    this.uploadArea.classList.remove('dragover');
+                });
+                
+                this.uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    this.uploadArea.classList.remove('dragover');
+                    this.handleFileSelection(e.dataTransfer.files[0]);
+                });
+                
+                // Analyze button
+                this.analyzeBtn.addEventListener('click', () => {
+                    this.analyzeProject();
+                });
+            }
+            
+            handleFileSelection(file) {
+                if (!file) return;
+                
+                // Validate file type
+                const validTypes = ['.zip', '.jar'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (!validTypes.includes(fileExtension)) {
+                    this.showError('Please select a valid ZIP or JAR file.');
+                    return;
+                }
+                
+                // Validate file size (100MB limit)
+                const maxSize = 100 * 1024 * 1024; // 100MB
+                if (file.size > maxSize) {
+                    this.showError('File size exceeds 100MB limit. Please select a smaller file.');
+                    return;
+                }
+                
+                this.selectedFile = file;
+                this.hideError();
+                this.showFileInfo(file);
+                this.analyzeBtn.style.display = 'inline-block';
+            }
+            
+            showFileInfo(file) {
+                this.fileName.textContent = file.name;
+                this.fileSize.textContent = this.formatFileSize(file.size);
+                this.fileInfo.style.display = 'block';
+            }
+            
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            showError(message) {
+                this.errorText.textContent = message;
+                this.errorSection.style.display = 'block';
+            }
+            
+            hideError() {
+                this.errorSection.style.display = 'none';
+            }
+            
+            async analyzeProject() {
+                if (!this.selectedFile) {
+                    this.showError('Please select a file first.');
+                    return;
+                }
+                
+                this.analyzeBtn.disabled = true;
+                this.progressSection.style.display = 'block';
+                this.resultSection.style.display = 'none';
+                this.hideError();
+                
+                try {
+                    // Step 1: Upload file
+                    this.updateProgress(20, 'Uploading file...');
+                    const uploadResult = await this.uploadFile();
+                    
+                    // Step 2: Analyze project
+                    this.updateProgress(60, 'Analyzing project...');
+                    const analysisResult = await this.analyzeUploadedFile(uploadResult.filePath);
+                    
+                    // Step 3: Show report
+                    this.updateProgress(100, 'Generating report...');
+                    await this.sleep(500);
+                    
+                    const reportUrl = '/reports/' + this.extractReportName(analysisResult.reportPath) + '/index.html';
+                    this.showReport(reportUrl);
+                    
+                } catch (error) {
+                    this.showError('Analysis failed: ' + error.message);
+                    this.progressSection.style.display = 'none';
+                } finally {
+                    this.analyzeBtn.disabled = false;
+                }
+            }
+            
+            async uploadFile() {
+                const formData = new FormData();
+                formData.append('file', this.selectedFile);
+                
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Upload failed: ' + response.statusText);
+                }
+                
+                return await response.json();
+            }
+            
+            async analyzeUploadedFile(filePath) {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filePath: filePath })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Analysis failed: ' + response.statusText);
+                }
+                
+                const result = await response.json();
+                if (result.status === 'error') {
+                    throw new Error(result.message);
+                }
+                
+                return result;
+            }
+            
+            updateProgress(percentage, text) {
+                this.progressFill.style.width = percentage + '%';
+                this.progressText.textContent = text;
+            }
+            
+            extractReportName(reportPath) {
+                // Extract the report directory name from the full path
+                const parts = reportPath.split('/');
+                return parts[parts.length - 1];
+            }
+            
+            sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+            
+            showReport(reportUrl) {
+                this.progressSection.style.display = 'none';
+                this.resultSection.style.display = 'block';
+                this.reportFrame.src = reportUrl;
+                
+                // Scroll to report
+                this.resultSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Initialize the analyzer when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new JDepsAnalyzer();
+        });
+    </script>
+</body>
+</html>
