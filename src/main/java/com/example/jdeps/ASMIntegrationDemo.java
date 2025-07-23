@@ -7,6 +7,10 @@ import java.util.Map;
  * Demo application showing ASM integration capabilities
  */
 public class ASMIntegrationDemo {
+
+    public ASMIntegrationDemo() {
+        super();
+    }
     
     public static void main(String[] args) {
         System.out.println("🔍 ASM Integration Demo");
