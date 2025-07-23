@@ -6,8 +6,6 @@ import java.io.*;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 /**
  * Advanced bytecode analyzer using ASM framework.
@@ -368,5 +366,315 @@ public class ASMBytecodeAnalyzer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Comprehensive project insights combining all analysis results
+     */
+    public static class ProjectInsights {
+        private Map<String, ClassAnalysisResult> classResults;
+        private PackageInsights packageInsights;
+        private SecurityInsights securityInsights;
+        private QualityInsights qualityInsights;
+        private ImpactAnalysis impactAnalysis;
+        
+        public ProjectInsights(Map<String, ClassAnalysisResult> classResults) {
+            this.classResults = classResults;
+            this.packageInsights = analyzePackages(classResults);
+            this.securityInsights = analyzeSecurityIssues(classResults);
+            this.qualityInsights = analyzeCodeQuality(classResults);
+            this.impactAnalysis = analyzeRemovalImpact(classResults);
+        }
+        
+        // Getters
+        public Map<String, ClassAnalysisResult> getClassResults() { return classResults; }
+        public PackageInsights getPackageInsights() { return packageInsights; }
+        public SecurityInsights getSecurityInsights() { return securityInsights; }
+        public QualityInsights getQualityInsights() { return qualityInsights; }
+        public ImpactAnalysis getImpactAnalysis() { return impactAnalysis; }
+    }
+    
+    public static class PackageInsights {
+        private Map<String, Integer> packageClassCount = new HashMap<>();
+        private Map<String, Double> packageComplexity = new HashMap<>();
+        private Map<String, Set<String>> packageDependencies = new HashMap<>();
+        private List<String> mostConnectedPackages = new ArrayList<>();
+        
+        // Getters
+        public Map<String, Integer> getPackageClassCount() { return packageClassCount; }
+        public Map<String, Double> getPackageComplexity() { return packageComplexity; }
+        public Map<String, Set<String>> getPackageDependencies() { return packageDependencies; }
+        public List<String> getMostConnectedPackages() { return mostConnectedPackages; }
+    }
+    
+    public static class SecurityInsights {
+        private List<String> reflectionUsage = new ArrayList<>();
+        private List<String> serializationClasses = new ArrayList<>();
+        private List<String> nativeMethodUsage = new ArrayList<>();
+        private List<String> deprecatedApiUsage = new ArrayList<>();
+        private int securityScore = 100;
+        
+        // Getters
+        public List<String> getReflectionUsage() { return reflectionUsage; }
+        public List<String> getSerializationClasses() { return serializationClasses; }
+        public List<String> getNativeMethodUsage() { return nativeMethodUsage; }
+        public List<String> getDeprecatedApiUsage() { return deprecatedApiUsage; }
+        public int getSecurityScore() { return securityScore; }
+    }
+    
+    public static class QualityInsights {
+        private double overallComplexity;
+        private List<String> highComplexityClasses = new ArrayList<>();
+        private List<String> potentialRefactoringCandidates = new ArrayList<>();
+        private int maintainabilityScore = 100;
+        private Map<String, Integer> designPatterns = new HashMap<>();
+        
+        // Getters
+        public double getOverallComplexity() { return overallComplexity; }
+        public List<String> getHighComplexityClasses() { return highComplexityClasses; }
+        public List<String> getPotentialRefactoringCandidates() { return potentialRefactoringCandidates; }
+        public int getMaintainabilityScore() { return maintainabilityScore; }
+        public Map<String, Integer> getDesignPatterns() { return designPatterns; }
+    }
+    
+    public static class ImpactAnalysis {
+        private Map<String, Set<String>> classImpacts = new HashMap<>();
+        private Map<String, Integer> removalRiskScores = new HashMap<>();
+        private List<String> criticalClasses = new ArrayList<>();
+        private Map<String, List<String>> affectedClasses = new HashMap<>();
+        
+        // Getters
+        public Map<String, Set<String>> getClassImpacts() { return classImpacts; }
+        public Map<String, Integer> getRemovalRiskScores() { return removalRiskScores; }
+        public List<String> getCriticalClasses() { return criticalClasses; }
+        public Map<String, List<String>> getAffectedClasses() { return affectedClasses; }
+    }
+    
+    /**
+     * Analyze packages for better organization insights
+     */
+    private static PackageInsights analyzePackages(Map<String, ClassAnalysisResult> classResults) {
+        PackageInsights insights = new PackageInsights();
+        
+        for (ClassAnalysisResult result : classResults.values()) {
+            String packageName = getPackageName(result.getClassName());
+            
+            // Count classes per package
+            insights.packageClassCount.merge(packageName, 1, Integer::sum);
+            
+            // Calculate package complexity
+            double complexity = result.getAverageMethodComplexity();
+            insights.packageComplexity.merge(packageName, complexity, (old, new_val) -> (old + new_val) / 2);
+            
+            // Track package dependencies
+            Set<String> deps = new HashSet<>();
+            for (String call : result.getMethodCalls()) {
+                String depPackage = getPackageName(call);
+                if (!depPackage.equals(packageName) && !depPackage.startsWith("java.")) {
+                    deps.add(depPackage);
+                }
+            }
+            insights.packageDependencies.put(packageName, deps);
+        }
+        
+        // Find most connected packages
+        insights.mostConnectedPackages = insights.packageDependencies.entrySet().stream()
+                .sorted((a, b) -> Integer.compare(b.getValue().size(), a.getValue().size()))
+                .limit(5)
+                .map(Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toList());
+        
+        return insights;
+    }
+    
+    /**
+     * Analyze security-related issues
+     */
+    private static SecurityInsights analyzeSecurityIssues(Map<String, ClassAnalysisResult> classResults) {
+        SecurityInsights insights = new SecurityInsights();
+        
+        for (ClassAnalysisResult result : classResults.values()) {
+            String className = result.getClassName();
+            
+            // Check for reflection usage
+            for (String call : result.getMethodCalls()) {
+                if (call.contains("java/lang/reflect/") || call.contains("Class.forName")) {
+                    insights.reflectionUsage.add(className + " -> " + call);
+                    insights.securityScore -= 5;
+                }
+            }
+            
+            // Check for serialization
+            if (result.getInterfaces().contains("java/io/Serializable")) {
+                insights.serializationClasses.add(className);
+                insights.securityScore -= 3;
+            }
+            
+            // Check for deprecated APIs (simple heuristic)
+            for (String call : result.getMethodCalls()) {
+                if (call.contains("deprecated") || call.contains("Date(") || call.contains("Thread.stop")) {
+                    insights.deprecatedApiUsage.add(className + " -> " + call);
+                    insights.securityScore -= 2;
+                }
+            }
+        }
+        
+        insights.securityScore = Math.max(0, insights.securityScore);
+        return insights;
+    }
+    
+    /**
+     * Analyze code quality metrics
+     */
+    private static QualityInsights analyzeCodeQuality(Map<String, ClassAnalysisResult> classResults) {
+        QualityInsights insights = new QualityInsights();
+        
+        double totalComplexity = 0;
+        int classCount = 0;
+        
+        for (ClassAnalysisResult result : classResults.values()) {
+            String className = result.getClassName();
+            double complexity = result.getAverageMethodComplexity();
+            totalComplexity += complexity;
+            classCount++;
+            
+            // High complexity classes
+            if (complexity > 10) {
+                insights.highComplexityClasses.add(className + " (complexity: " + String.format("%.2f", complexity) + ")");
+                insights.maintainabilityScore -= 10;
+            }
+            
+            // Potential refactoring candidates (large classes with high complexity)
+            if (result.getTotalMethods() > 20 && complexity > 8) {
+                insights.potentialRefactoringCandidates.add(className);
+                insights.maintainabilityScore -= 5;
+            }
+            
+            // Detect potential design patterns
+            detectDesignPatterns(result, insights);
+        }
+        
+        insights.overallComplexity = classCount > 0 ? totalComplexity / classCount : 0;
+        insights.maintainabilityScore = Math.max(0, insights.maintainabilityScore);
+        
+        return insights;
+    }
+    
+    /**
+     * Analyze impact of removing classes/JARs
+     */
+    private static ImpactAnalysis analyzeRemovalImpact(Map<String, ClassAnalysisResult> classResults) {
+        ImpactAnalysis analysis = new ImpactAnalysis();
+        
+        // Build dependency graph
+        Map<String, Set<String>> dependents = new HashMap<>();
+        
+        for (ClassAnalysisResult result : classResults.values()) {
+            String className = result.getClassName();
+            
+            for (String call : result.getMethodCalls()) {
+                String targetClass = extractClassName(call);
+                if (classResults.containsKey(targetClass)) {
+                    dependents.computeIfAbsent(targetClass, k -> new HashSet<>()).add(className);
+                }
+            }
+            
+            for (String field : result.getFieldAccess()) {
+                String targetClass = extractClassName(field);
+                if (classResults.containsKey(targetClass)) {
+                    dependents.computeIfAbsent(targetClass, k -> new HashSet<>()).add(className);
+                }
+            }
+        }
+        
+        // Calculate impact scores
+        for (String className : classResults.keySet()) {
+            Set<String> impacts = dependents.getOrDefault(className, new HashSet<>());
+            analysis.classImpacts.put(className, impacts);
+            
+            // Risk score based on number of dependents and their complexity
+            int riskScore = impacts.size() * 10;
+            for (String dependent : impacts) {
+                ClassAnalysisResult depResult = classResults.get(dependent);
+                if (depResult != null) {
+                    riskScore += (int) depResult.getAverageMethodComplexity();
+                }
+            }
+            
+            analysis.removalRiskScores.put(className, riskScore);
+            
+            // Critical classes (high impact)
+            if (riskScore > 50) {
+                analysis.criticalClasses.add(className);
+            }
+            
+            // Build affected classes list
+            analysis.affectedClasses.put(className, new ArrayList<>(impacts));
+        }
+        
+        return analysis;
+    }
+    
+    /**
+     * Simple design pattern detection
+     */
+    private static void detectDesignPatterns(ClassAnalysisResult result, QualityInsights insights) {
+        String className = result.getClassName().toLowerCase();
+        
+        if (className.contains("factory")) {
+            insights.designPatterns.merge("Factory", 1, Integer::sum);
+        }
+        if (className.contains("singleton")) {
+            insights.designPatterns.merge("Singleton", 1, Integer::sum);
+        }
+        if (className.contains("observer") || className.contains("listener")) {
+            insights.designPatterns.merge("Observer", 1, Integer::sum);
+        }
+        if (className.contains("adapter")) {
+            insights.designPatterns.merge("Adapter", 1, Integer::sum);
+        }
+        if (className.contains("strategy")) {
+            insights.designPatterns.merge("Strategy", 1, Integer::sum);
+        }
+    }
+    
+    /**
+     * Extract package name from class name
+     */
+    private static String getPackageName(String className) {
+        if (className == null || !className.contains("/")) {
+            return "default";
+        }
+        int lastSlash = className.lastIndexOf('/');
+        return className.substring(0, lastSlash).replace('/', '.');
+    }
+    
+    /**
+     * Extract class name from method/field reference
+     */
+    private static String extractClassName(String reference) {
+        if (reference == null) return "";
+        
+        // Handle method calls like "com/example/MyClass.method"
+        if (reference.contains(".")) {
+            return reference.substring(0, reference.lastIndexOf('.'));
+        }
+        
+        // Handle field access like "com/example/MyClass/field"
+        if (reference.contains("/")) {
+            String[] parts = reference.split("/");
+            if (parts.length > 1) {
+                return String.join("/", Arrays.copyOf(parts, parts.length - 1));
+            }
+        }
+        
+        return reference;
+    }
+    
+    /**
+     * Generate comprehensive project insights
+     */
+    public static ProjectInsights generateProjectInsights(Map<String, ClassAnalysisResult> classResults) {
+        return new ProjectInsights(classResults);
     }
 }

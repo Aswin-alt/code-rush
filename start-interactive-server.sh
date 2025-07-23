@@ -25,4 +25,9 @@ echo "🌐 Starting web server on port 8080..."
 echo "📂 Web UI available at: http://localhost:8080/app.html"
 echo "🛑 Press Ctrl+C to stop the server"
 
-java -cp "target/classes" com.example.jdeps.JDepsWebServer
+# Build the classpath with Maven dependencies
+echo "📚 Building classpath with dependencies..."
+mvn dependency:build-classpath -Dmdep.outputFile=classpath.txt -q
+CLASSPATH=$(cat classpath.txt)
+
+java -cp "target/classes:$CLASSPATH" com.example.jdeps.JDepsWebServer
