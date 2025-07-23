@@ -7,6 +7,7 @@ A comprehensive web-based tool for analyzing Java project dependencies using JDe
 - **📁 File Upload**: Drag & drop interface for ZIP files (up to 100MB)
 - **🔍 Dual Analysis**: Supports both Java source projects and deployed applications with JAR files
 - **📊 Interactive Reports**: Beautiful HTML reports with dependency graphs and statistics
+- **🔧 ASM Bytecode Analysis**: Deep bytecode inspection with complexity metrics and detailed class analysis
 - **⚡ Real-time Progress**: Live progress tracking during analysis
 - **🌐 Web Interface**: Modern, responsive web UI
 - **🔧 Multiple Formats**: Generates HTML, JSON, and text reports
@@ -93,11 +94,19 @@ jdeps-test-maven/
 
 ## 📊 Analysis Types
 
-The tool provides three levels of JDeps analysis:
+The tool provides multiple levels of analysis:
 
+### JDeps Analysis
 1. **Basic Analysis**: Shows direct dependencies
-2. **Verbose Analysis**: Detailed class-level dependencies
+2. **Verbose Analysis**: Detailed class-level dependencies  
 3. **Summary Analysis**: High-level dependency summary
+
+### ASM Bytecode Analysis
+1. **Class Structure**: Detailed class information (interfaces, abstract, final)
+2. **Method Complexity**: Cyclomatic complexity metrics for each method
+3. **Dependency Tracking**: Method calls and field access analysis
+4. **Code Metrics**: Lines of code, method count, field count statistics
+5. **Annotation Detection**: Identifies annotations used in the codebase
 
 ## 🎯 Supported File Types
 
@@ -132,6 +141,44 @@ jdeps -jdkinternals target/jdeps-test-1.0-SNAPSHOT.jar
 # Summary view
 jdeps -s target/jdeps-test-1.0-SNAPSHOT.jar
 ```
+
+## 🔧 ASM Integration
+
+ASM (ASM Bytecode Manipulation Framework) is integrated to provide enhanced bytecode analysis:
+
+### Running ASM Analysis
+```bash
+# Compile the project first
+mvn compile
+
+# Run ASM demo
+./run-asm-demo.sh
+
+# Or run manually
+java -cp target/classes com.example.jdeps.ASMIntegrationDemo
+```
+
+### ASM Capabilities
+
+**🏗️ Class Analysis:**
+- Class type detection (interface, abstract, final)
+- Inheritance hierarchy analysis
+- Annotation scanning
+
+**📊 Method Analysis:**
+- Cyclomatic complexity calculation
+- Method signature analysis
+- Instruction-level dependency tracking
+
+**📈 Code Metrics:**
+- Total methods and fields per class
+- Average complexity per class
+- Dependency count analysis
+
+**🔍 Bytecode Inspection:**
+- Method call analysis
+- Field access patterns
+- Type usage detection
 
 ## 🔍 Example Output
 
@@ -171,9 +218,14 @@ The generated reports include:
 ## Dependencies
 
 The project includes the following external dependencies:
-- Apache Commons Lang3 (for string utilities)
-- Jackson Databind (for JSON processing)
-- JUnit (for testing)
+- **Apache Commons Lang3** (for string utilities)
+- **Jackson Databind** (for JSON processing)
+- **ASM Framework** (for bytecode analysis)
+  - ASM Core (bytecode manipulation)
+  - ASM Commons (higher-level operations)
+  - ASM Tree (tree-based API)
+  - ASM Analysis (data flow analysis)
+- **JUnit** (for testing)
 
 ## 🔗 Related Tools
 

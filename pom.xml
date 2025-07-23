@@ -34,6 +34,34 @@
             <version>2.15.2</version>
         </dependency>
 
+        <!-- ASM for bytecode analysis -->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>9.6</version>
+        </dependency>
+        
+        <!-- ASM Commons for higher-level bytecode operations -->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>9.6</version>
+        </dependency>
+        
+        <!-- ASM Tree API for tree-based bytecode manipulation -->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <version>9.6</version>
+        </dependency>
+        
+        <!-- ASM Analysis for data flow analysis -->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-analysis</artifactId>
+            <version>9.6</version>
+        </dependency>
+
         <!-- JUnit for testing -->
         <dependency>
             <groupId>junit</groupId>

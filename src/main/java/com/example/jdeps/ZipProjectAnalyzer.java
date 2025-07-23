@@ -147,6 +147,9 @@ public class ZipProjectAnalyzer {
                     
                     // Run JDeps analysis
                     analysis.jdepsResults = runJDepsAnalysis(jarFile);
+                    
+                    // Run ASM bytecode analysis for enhanced metrics
+                    analysis.asmResults = runASMAnalysis(jarFile);
                 }
             }
         } else if (analysis.jarFiles != null && !analysis.jarFiles.isEmpty()) {
@@ -363,6 +366,26 @@ public class ZipProjectAnalyzer {
         return output.toString();
     }
     
+    /**
+     * Run ASM bytecode analysis for enhanced metrics and insights
+     */
+    private Map<String, ASMBytecodeAnalyzer.ClassAnalysisResult> runASMAnalysis(Path jarFile) {
+        System.out.println("Running ASM bytecode analysis on: " + jarFile);
+        
+        try {
+            Map<String, ASMBytecodeAnalyzer.ClassAnalysisResult> results = 
+                ASMBytecodeAnalyzer.analyzeJarFile(jarFile.toString());
+            
+            System.out.println("ASM analysis completed. Analyzed " + results.size() + " classes");
+            return results;
+            
+        } catch (Exception e) {
+            System.err.println("ASM analysis error: " + e.getMessage());
+            e.printStackTrace();
+            return new HashMap<>();
+        }
+    }
+    
     private String generateWebReport(ProjectAnalysis analysis, Path reportsDir, String projectName) throws IOException {
         System.out.println("Generating web report...");
         
@@ -428,6 +451,7 @@ public class ZipProjectAnalyzer {
                 .append("                    <button class=\"tab-button active\" onclick=\"showTab('basic')\">Basic Analysis</button>\n")
                 .append("                    <button class=\"tab-button\" onclick=\"showTab('verbose')\">Verbose Analysis</button>\n")
                 .append("                    <button class=\"tab-button\" onclick=\"showTab('summary')\">Summary</button>\n")
+                .append("                    <button class=\"tab-button\" onclick=\"showTab('asm')\">ASM Bytecode</button>\n")
                 .append("                </div>\n")
                 .append("                \n")
                 .append("                <div id=\"basic\" class=\"tab-content active\">\n")
@@ -449,6 +473,11 @@ public class ZipProjectAnalyzer {
                 .append("                    <div class=\"analysis-output\">\n")
                 .append(formatAnalysisOutput(analysis.jdepsResults.summaryAnalysis))
                 .append("                    </div>\n")
+                .append("                </div>\n")
+                .append("                \n")
+                .append("                <div id=\"asm\" class=\"tab-content\">\n")
+                .append("                    <h3>🔍 ASM Bytecode Analysis</h3>\n")
+                .append(generateASMAnalysisSection(analysis.asmResults))
                 .append("                </div>\n")
                 .append("            </div>\n")
                 .append("        </div>\n");
@@ -496,7 +525,103 @@ public class ZipProjectAnalyzer {
                ".tab-content { display: none; padding: 20px; }\n" +
                ".tab-content.active { display: block; }\n" +
                ".analysis-output { background: #2c3e50; color: #ecf0f1; padding: 20px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }\n" +
-               ".error-section { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 10px; color: #d00; }";
+               ".error-section { background: #fee; border: 1px solid #fcc; padding: 20px; border-radius: 10px; color: #d00; }" +
+               ".asm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }" +
+               ".stat-card { background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 15px; border-radius: 8px; text-align: center; }" +
+               ".stat-number { font-size: 1.8em; font-weight: bold; display: block; }" +
+               ".stat-label { font-size: 0.9em; opacity: 0.9; }" +
+               ".class-table { width: 100%; border-collapse: collapse; margin: 20px 0; }" +
+               ".class-table th, .class-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }" +
+               ".class-table th { background: #f2f2f2; }" +
+               ".complexity-low { background: #d4edda; }" +
+               ".complexity-medium { background: #fff3cd; }" +
+               ".complexity-high { background: #f8d7da; }";
+    }
+    
+    /**
+     * Generate ASM analysis section for the HTML report
+     */
+    private String generateASMAnalysisSection(Map<String, ASMBytecodeAnalyzer.ClassAnalysisResult> asmResults) {
+        if (asmResults == null || asmResults.isEmpty()) {
+            return "<p>ASM analysis not available or failed.</p>";
+        }
+        
+        StringBuilder section = new StringBuilder();
+        
+        // Calculate summary statistics
+        int totalClasses = asmResults.size();
+        int totalMethods = asmResults.values().stream().mapToInt(ASMBytecodeAnalyzer.ClassAnalysisResult::getTotalMethods).sum();
+        int totalFields = asmResults.values().stream().mapToInt(ASMBytecodeAnalyzer.ClassAnalysisResult::getTotalFields).sum();
+        double avgComplexity = asmResults.values().stream()
+                .mapToDouble(ASMBytecodeAnalyzer.ClassAnalysisResult::getAverageMethodComplexity)
+                .average().orElse(0.0);
+        int totalDependencies = asmResults.values().stream()
+                .mapToInt(r -> r.getMethodCalls().size() + r.getFieldAccess().size()).sum();
+        
+        // Summary statistics
+        section.append("<div class=\"asm-stats\">\n")
+               .append("  <div class=\"stat-card\">\n")
+               .append("    <span class=\"stat-number\">").append(totalClasses).append("</span>\n")
+               .append("    <span class=\"stat-label\">Classes Analyzed</span>\n")
+               .append("  </div>\n")
+               .append("  <div class=\"stat-card\">\n")
+               .append("    <span class=\"stat-number\">").append(totalMethods).append("</span>\n")
+               .append("    <span class=\"stat-label\">Total Methods</span>\n")
+               .append("  </div>\n")
+               .append("  <div class=\"stat-card\">\n")
+               .append("    <span class=\"stat-number\">").append(totalFields).append("</span>\n")
+               .append("    <span class=\"stat-label\">Total Fields</span>\n")
+               .append("  </div>\n")
+               .append("  <div class=\"stat-card\">\n")
+               .append("    <span class=\"stat-number\">").append(String.format("%.1f", avgComplexity)).append("</span>\n")
+               .append("    <span class=\"stat-label\">Avg Complexity</span>\n")
+               .append("  </div>\n")
+               .append("  <div class=\"stat-card\">\n")
+               .append("    <span class=\"stat-number\">").append(totalDependencies).append("</span>\n")
+               .append("    <span class=\"stat-label\">Dependencies</span>\n")
+               .append("  </div>\n")
+               .append("</div>\n");
+        
+        // Detailed class table
+        section.append("<h4>📋 Class Details</h4>\n")
+               .append("<table class=\"class-table\">\n")
+               .append("  <thead>\n")
+               .append("    <tr>\n")
+               .append("      <th>Class Name</th>\n")
+               .append("      <th>Type</th>\n")
+               .append("      <th>Methods</th>\n")
+               .append("      <th>Fields</th>\n")
+               .append("      <th>Avg Complexity</th>\n")
+               .append("      <th>Dependencies</th>\n")
+               .append("    </tr>\n")
+               .append("  </thead>\n")
+               .append("  <tbody>\n");
+        
+        for (ASMBytecodeAnalyzer.ClassAnalysisResult result : asmResults.values()) {
+            String complexityClass = getComplexityClass(result.getAverageMethodComplexity());
+            String classType = result.isInterface() ? "Interface" : 
+                              result.isAbstract() ? "Abstract" : "Class";
+            
+            section.append("    <tr class=\"").append(complexityClass).append("\">\n")
+                   .append("      <td>").append(result.getClassName().replace("/", ".")).append("</td>\n")
+                   .append("      <td>").append(classType).append("</td>\n")
+                   .append("      <td>").append(result.getTotalMethods()).append("</td>\n")
+                   .append("      <td>").append(result.getTotalFields()).append("</td>\n")
+                   .append("      <td>").append(String.format("%.2f", result.getAverageMethodComplexity())).append("</td>\n")
+                   .append("      <td>").append(result.getMethodCalls().size() + result.getFieldAccess().size()).append("</td>\n")
+                   .append("    </tr>\n");
+        }
+        
+        section.append("  </tbody>\n")
+               .append("</table>\n");
+        
+        return section.toString();
+    }
+    
+    private String getComplexityClass(double complexity) {
+        if (complexity > 10) return "complexity-high";
+        else if (complexity > 5) return "complexity-medium";
+        else return "complexity-low";
     }
     
     private String formatAnalysisOutput(String output) {
@@ -542,6 +667,7 @@ public class ZipProjectAnalyzer {
         public String compiledClassesDir;
         public String jarFile;
         public JDepsResults jdepsResults;
+        public Map<String, ASMBytecodeAnalyzer.ClassAnalysisResult> asmResults;
 
         public ProjectAnalysis() {
             super();
